@@ -1,26 +1,9 @@
 library(tidyverse)
-library(magrittr)
 library(dplyr)
-library(tidyr)
-library(readr)
-library(tibble)
-library(stringr)
-library(forcats)
-library(janitor)
-library(multiway)
-library(citr)
-library(kableExtra)
-library(flextable)
-library(gt)
-library(bibtex)
-library(ggplot2)
-library(readr)
-library("Hmisc")
-library(Rmisc)
-library(pgirmess)
 library(palmerpenguins)
 library(GGally)
 library(Rtsne)
+library(tidyr)
 
 penguin <- penguins_raw %>%
   janitor::clean_names()
@@ -34,11 +17,23 @@ penguin %>%
 #filter out NA
 penguin <- penguin %>% 
 filter(!is.na(body_mass_g))
+
+
+
+
 #split species by scientific and common names
+
+penguin$common_name <- "blank"
+penguin$scientific_name <- "blank"
+
 penguin <- penguin %>% 
-  extract(penguin$species, 
+  extract(species, 
           c("common_name", "scientific_name"),
           "([a-zA-Z]+\\s[a-zA-Z]+)\\s\\(([a-zA-Z]+\\s[a-zA-Z]+)\\)")
+
+
+
+
 
 #pipe into ggpairs
 penguin %>%
@@ -106,5 +101,49 @@ dat <- data.frame(dat, type = meta$louvain)
 dat %>% ggplot(aes(x = X1, y = X2, colour = type)) +
   geom_point(size = 0.5)
 
+#wheat
+setwd("~/University/Data Analysis Y4/Week 8/Week8")
+#file <- "../wheat/data.txt"
+#wheat <- read.table(File, header = FALSE)
 
+wheat <- read.table("seeds_dataset.txt", header = FALSE)
+#rename columns
+names(wheat)[names(wheat) == "V1"] <- "area"
+names(wheat)[names(wheat) == "V2"] <- "perimeter"
+names(wheat)[names(wheat) == "V3"] <- "compact"
+names(wheat)[names(wheat) == "V4"] <- "length.of.kernel"
+names(wheat)[names(wheat) == "V5"] <- "width.of.kernel"
+names(wheat)[names(wheat) == "V6"] <- "asymmetry.coefficient"
+names(wheat)[names(wheat) == "V7"] <- "length.of.kernel.groove"
+names(wheat)[names(wheat) == "V8"] <- "strain"
 
+pca <- wheat %>%
+  select(wheat$strain) %>%
+  prcomp(scale. = TRUE)
+summary(pca)
+pca$rotation
+
+wheat$strain <- as.factor(wheat$strain)
+
+wheat %>% 
+  GGally::ggpairs(aes(color = strain)) 
+
+pca_labelled <- data.frame(pca$x, species = wheat$species)
+ggplot(pca_labelled, aes(x = PC1, y = PC2, color = species)) +
+  geom_point()
+
+tsne <- wheat %>% 
+  select(-strain) %>%
+  Rtsne(perplexity = 20,
+        check_duplicates = FALSE)
+
+dat <- data.frame(tsne$Y,  strain = wheat$strain)
+
+dat %>% ggplot(aes(x = X1, y = X2, colour = strain)) +
+  geom_point()
+
+#mew 
+sol <- read_table2(file)
+names(sol)
+
+names(tsol) <- sol$genename
