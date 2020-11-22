@@ -4,7 +4,7 @@ library(palmerpenguins)
 library(GGally)
 library(Rtsne)
 library(tidyr)
-
+setwd("~/University/Data Analysis Y4/Week 8/Week8")
 penguin <- penguins_raw %>%
   janitor::clean_names()
 
@@ -44,7 +44,7 @@ penguin %>%
                   ends_with("_mm")) %>%
   
 #pipe 4 variables into cromp
-  pca <- penguin %>% 
+  pca <- penguin %>%
   select(body_mass_g,
          ends_with("_mm")) %>%
   prcomp(scale. = TRUE)
@@ -143,7 +143,40 @@ dat %>% ggplot(aes(x = X1, y = X2, colour = strain)) +
   geom_point()
 
 #mew 
-sol <- read_table2(file)
+#file <- "../data-raw/sol.txt"
+#sol <- read_table2(file)
+#names(sol)
+sol <- read.table("sol.txt", header = TRUE)
 names(sol)
 
+tsol <- sol %>% 
+  select(-genename) %>% 
+  t() %>% 
+  data.frame()
+
 names(tsol) <- sol$genename
+tsol$sample <- row.names(tsol)
+
+tsol <- tsol %>% 
+  extract(sample, 
+          c("lineage","rep"),
+          "(Y[0-9]{3,4})\\_([A-C])")
+
+pca <- tsol %>% 
+  select(-lineage, -rep) %>%
+  prcomp(scale. = TRUE)
+summary(pca)
+
+pca_labelled <- data.frame(pca$x, lineage = tsol$lineage)
+ggplot(pca_labelled, aes(x = PC1, y = PC2, color = lineage)) +
+  geom_point()
+
+tsne <- tsol %>% 
+  select(-lineage, -rep) %>%
+  Rtsne(perplexity = 4,
+        check_duplicates = FALSE)
+
+dat <- data.frame(tsne$Y,  lineage = tsol$lineage)
+
+dat %>% ggplot(aes(x = X1, y = X2, colour = lineage)) +
+  geom_point()
